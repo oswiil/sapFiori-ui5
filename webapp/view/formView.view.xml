@@ -1,0 +1,27 @@
+<mvc:View xmlns:form="sap.ui.layout.form"
+  xmlns:core="sap.ui.core"
+  controllerName="msupply.project1.controller.countzones"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:layout="sap.ui.layout"
+>
+  <Page id="formPage" title="{i18n>formTitle}">
+    <content>
+      <form:SimpleForm id="simpleForm">
+       <Label text="Campo 1" id="Label1" />
+  <Input id="inputField1" />
+
+  <Label text="Campo 2" id="Label2" />
+  <Input id="inputField2" />
+
+  <Label text="Campo 3" id="Label3" />
+  <Input id="inputField3" />
+
+  <Label text="Campo 4"  id="Label4" />
+  <Input id="inputField4" />
+      </form:SimpleForm>
+            <Button id="finishbutton" text="Añadir registro" press="onSave" />
+
+    </content>
+  </Page>
+</mvc:View>
