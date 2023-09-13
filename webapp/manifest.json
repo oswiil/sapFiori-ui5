@@ -56,6 +56,10 @@
         "type": "sap.ui.model.json.JSONModel",
         "uri": "mockdata/YourData.json"
       },
+      "products": {
+        "type": "sap.ui.model.json.JSONModel",
+        "uri": "mockdata/products.json"
+      },
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
@@ -78,7 +82,15 @@
         "viewPath": "msupply.project1.view",
         "controlAggregation": "pages",
         "controlId": "app",
-        "clearControlAggregation": false
+        "clearControlAggregation": false,
+        "sample": {
+          "stretch": true,
+          "files": [
+            "View.view.xml",
+            "Controller.controller.js",
+            "manifest.json"
+          ]
+        }
       },
       "routes": [
         {

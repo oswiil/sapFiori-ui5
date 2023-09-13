@@ -1,60 +1,162 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
-    "sap/ui/core/util/File"
-
-  ], function (Controller, File) {
+    "sap/ui/core/util/File",
+    "sap/ui/model/json/JSONModel", // Add this line to import JSONModel
+    "sap/ui/table/RowAction",
+    "sap/ui/table/RowActionItem",
+    "sap/ui/table/RowSettings",
+    "sap/m/MessageToast"
+  ], function (Controller, File, JSONModel, RowAction, RowActionItem,RowSettings,MessageToast) {
     "use strict";
     return Controller.extend("msupply.project1.controller.countzones", {
-      onInit: function () {
-        // Inicialización
-      },
-      onListItemPress: function (oEvent) {
-        var oItem = oEvent.getParameter("listItem");
-        var sAction = oItem.getCustomData()[0].getValue();
-        if (sAction === "edit") {
-          // Lógica para editar el elemento seleccionado
-        }
+      onInit: function() {
+
+        // set explored app's demo model on this sample
+        var oJSONModel = this.initSampleDataModel();
+        this.getView().setModel(oJSONModel);
+  
+        var fnPress = this.handleActionPress.bind(this);
+  
+        this.modes = [
+          {
+            key: "Navigation",
+            text: "Navigation",
+            handler: function() {
+              var oTemplate = new RowAction({items: [
+                new RowActionItem({
+                  type: "Navigation",
+                  press: fnPress,
+                  visible: "{Available}"
+                })
+              ]});
+              return [1, oTemplate];
+            }
+          }, {
+            key: "NavigationDelete",
+            text: "Navigation & Delete",
+            handler: function() {
+              var oTemplate = new RowAction({items: [
+                new RowActionItem({
+                  type: "Navigation",
+                  press: fnPress,
+                  visible: "{Available}"
+                }),
+                new RowActionItem({type: "Delete", press: fnPress})
+              ]});
+              return [2, oTemplate];
+            }
+          }, {
+            key: "NavigationCustom",
+            text: "Navigation & Custom",
+            handler: function() {
+              var oTemplate = new RowAction({items: [
+                new RowActionItem({
+                  type: "Navigation",
+                  press: fnPress,
+                  visible: "{Available}"
+                }),
+                new RowActionItem({icon: "sap-icon://edit", text: "Edit", press: fnPress})
+              ]});
+              return [2, oTemplate];
+            }
+          }, {
+            key: "Multi",
+            text: "Multiple Actions",
+            handler: function() {
+              var oTemplate = new RowAction({items: [
+                new RowActionItem({icon: "sap-icon://attachment", text: "Attachment", press: fnPress}),
+                new RowActionItem({icon: "sap-icon://search", text: "Search", press: fnPress}),
+                new RowActionItem({icon: "sap-icon://edit", text: "Edit", press: fnPress}),
+                new RowActionItem({icon: "sap-icon://line-chart", text: "Analyze", press: fnPress})
+              ]});
+              return [2, oTemplate];
+            }
+          }, {
+            key: "None",
+            text: "No Actions",
+            handler: function() {
+              return [0, null];
+            }
+          }
+        ];
+  
+        this.getView().setModel(new JSONModel({items: this.modes}), "modes");
+        this.switchState("Navigation");
       },
       onAddRecord: function() {
         // Navega a la vista del formulario
         console.log("EEESA")
         this.getOwnerComponent().getRouter().navTo("formView");
       },
-      onSave: function() {
-         // Obtén los valores de los campos de entrada
-  var input1 = this.byId("inputField1").getValue();
-  var input2 = this.byId("inputField2").getValue();
-  var input3 = this.byId("inputField3").getValue();
-  var input4 = this.byId("inputField4").getValue();
-
-  // Crea un nuevo objeto con los valores de los campos de entrada
-  var newRecord = {
-    "ID": "3",
-    "Name": input1,
-    "Description": input2,
-    "Column3": input3,
-    "Column4": input4
-  };
-  var oFileReader = new FileReader();
+      initSampleDataModel: function() {
+        var oModel = new JSONModel();
   
-  // Obtén los datos existentes del archivo yourData.json
-  oFileReader.read("mockdata/yourData.json", "json")
-    .then(function(data) {
-      // Agrega el nuevo objeto al arreglo "results"
-      data.results.push(newRecord);
-
-      // Guarda los datos actualizados en el archivo yourData.json
-      File.write("mockdata/yourData.json", JSON.stringify(data));
-
-      // Muestra un mensaje de éxito
-      sap.m.MessageToast.show("Registro añadido");
-    })
-    .catch(function(error) {
-      // Muestra un mensaje de error
-      sap.m.MessageToast.show("Error al añadir el registro");
+        jQuery.ajax(sap.ui.require.toUrl("sap/ui/demo/mock/products.json"), {
+          dataType: "json",
+          success: function(oData) {
+            for (var i = 0; i < oData.ProductCollection.length; i++) {
+              var oProduct = oData.ProductCollection[i];
+              oProduct.Available = oProduct.Status == "Available" ? true : false;
+              if (i === 1) {
+                oProduct.NavigatedState = true;
+              }
+            }
+            oModel.setData(oData);
+          },
+          error: function() {
+            // Log.error("failed to load json");
+          }
+        });
+  
+        return oModel;
+      },
+  
+      onNavIndicatorsToggle: function(oEvent) {
+        var oTable = this.byId("table");
+        var oToggleButton = oEvent.getSource();
+  
+        if (oToggleButton.getPressed()) {
+          oTable.setRowSettingsTemplate(new RowSettings({
+            navigated: "{NavigatedState}"
+          }));
+        } else {
+          oTable.setRowSettingsTemplate(null);
+        }
+      },
+  
+      onBehaviourModeChange: function(oEvent) {
+        this.switchState(oEvent.getParameter("selectedItem").getKey());
+      },
+  
+      switchState: function(sKey) {
+        var oTable = this.byId("table");
+        var iCount = 0;
+        var oTemplate = oTable?.getRowActionTemplate();
+        if (oTemplate) {
+          oTemplate.destroy();
+          oTemplate = null;
+        }
+  
+        for (var i = 0; i < this.modes.length; i++) {
+          if (sKey == this.modes[i].key) {
+            var aRes = this.modes[i].handler();
+            iCount = aRes[0];
+            oTemplate = aRes[1];
+            break;
+          }
+        }
+  
+        oTable?.setRowActionTemplate(oTemplate);
+        oTable?.setRowActionCount(iCount);
+      },
+  
+      handleActionPress: function(oEvent) {
+        var oRow = oEvent.getParameter("row");
+        var oItem = oEvent.getParameter("item");
+        MessageToast.show("Item " + (oItem.getText() || oItem.getType()) + " pressed for product with id " +
+          this.getView().getModel().getProperty("ProductId", oRow.getBindingContext()));
+      }
+  
     });
-}
-      
-    
-    });
+  
   });

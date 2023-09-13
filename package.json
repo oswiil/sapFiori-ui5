@@ -9,10 +9,16 @@
     "sapui5"
   ],
   "main": "webapp/index.html",
-  "dependencies": {},
+  "dependencies": {
+
+    "@openui5/themelib_sap_fiori_3": "^1",
+    "@openui5/sap.m": "^1",
+    "@openui5/sap.ui.table": "^1"    
+  },
   "devDependencies": {
     "@ui5/cli": "^3.0.0",
     "@sap/ux-ui5-tooling": "1"
+    
   },
   "scripts": {
     "start": "fiori run --open \"test/flpSandbox.html?sap-ui-xx-viewCache=false#msupplyproject1-display\"",
